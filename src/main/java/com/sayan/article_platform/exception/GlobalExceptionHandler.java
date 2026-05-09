@@ -39,7 +39,9 @@ public class GlobalExceptionHandler {
         if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException cve) {
             String constraint = cve.getConstraintName();
 
-            if ("article_likes_p3_user_id_article_id_key".equals(constraint)) {
+            if (constraint != null
+                    && constraint.contains("article")
+                    && constraint.contains("like")) {
                 message = "User has already liked this article";
             }
             if("users_email_key".equals(constraint)) {
