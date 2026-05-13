@@ -8,6 +8,9 @@ import com.sayan.article_platform.exception.ResourceNotFoundException;
 import com.sayan.article_platform.repository.ArticleLikeRepository;
 import com.sayan.article_platform.repository.ArticleRepository;
 import com.sayan.article_platform.repository.UserRepository;
+import com.sayan.article_platform.security.SecurityUtil;
+import com.sayan.article_platform.util.AuthUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class LikeServiceImpl implements LikeService {
 
     private final ArticleLikeRepository repo;
@@ -32,11 +36,17 @@ public class LikeServiceImpl implements LikeService {
 
     @Override
     public void likeArticle(UUID articleId, UUID userId) {
+        if(userId == null) {
+            log.info("User {} is trying to like article {}", userId, articleId);
+            userId = SecurityUtil.getCurrentUserId();
+        }
         repo.save(new ArticleLike(UUID.randomUUID(), articleId, userId));
     }
 
     @Override
     public LikesCountResponse getLikesCount(UUID articleId) {
+
+        log.info("Fetching likes count for article {}", articleId);
 
         if (!articleRepository.existsById(articleId)) {
             throw new ResourceNotFoundException("Article not found");
@@ -52,6 +62,7 @@ public class LikeServiceImpl implements LikeService {
             UUID articleId,
             Pageable pageable) {
 
+        log.info("Fetching users who liked article {} with pagination {}", articleId, pageable);
         // 1. Validate article
         if (!articleRepository.existsById(articleId)) {
             throw new ResourceNotFoundException("Article not found");

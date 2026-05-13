@@ -69,7 +69,7 @@ class AuthServiceImplTest {
                 user.getPasswordHash()
         )).thenReturn(true);
 
-        when(jwtUtil.generate(userId))
+        when(jwtUtil.generate(any(String.class)))
                 .thenReturn("jwt-login-token");
 
         AuthResponse response = authService.login(loginRequest);

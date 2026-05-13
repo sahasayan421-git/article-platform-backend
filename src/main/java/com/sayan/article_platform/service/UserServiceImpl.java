@@ -1,10 +1,12 @@
 package com.sayan.article_platform.service;
 
 import com.sayan.article_platform.dto.response.UserMentionResponse;
+import com.sayan.article_platform.entity.User;
 import com.sayan.article_platform.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -26,5 +28,9 @@ public class UserServiceImpl implements UserService {
                         user.getUsername()
                 ))
                 .toList();
+    }
+
+    public User fetchUserById(UUID id) {
+        return repository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

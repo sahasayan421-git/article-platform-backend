@@ -11,8 +11,11 @@ import com.sayan.article_platform.repository.ArticleRepository;
 import com.sayan.article_platform.repository.CommentRepository;
 import com.sayan.article_platform.repository.MentionRepository;
 import com.sayan.article_platform.repository.UserRepository;
+import com.sayan.article_platform.security.SecurityUtil;
 import com.sayan.article_platform.util.MentionParser;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepo;
@@ -46,15 +50,19 @@ public class CommentServiceImpl implements CommentService {
     @CacheEvict(value = "comments", key = "#request.articleId()")
     public UUID reply(CreateCommentRequest request, UUID userId) {
 
+        log.info("User {} is replying to article {} with content: {}", SecurityUtil.getCurrentUserId(), request.articleId(), request.content());
+
         Comment c = new Comment();
         c.setId(UUID.randomUUID());
         c.setArticleId(request.articleId());
-        c.setUserId(userId);
+        c.setUserId(SecurityUtil.getCurrentUserId());
         c.setParentCommentId(request.parentCommentId());
         c.setContent(request.content());
         c.setCreatedAt(LocalDateTime.now());
 
         commentRepo.save(c);
+
+        log.info("Comment {} saved successfully", c.getId());
 
         mentionParser.parse(request.content()).forEach(username ->
                 userRepo.findByUsername(username).ifPresent(user -> {
@@ -68,14 +76,20 @@ public class CommentServiceImpl implements CommentService {
                 })
         );
 
+        log.info("Mentions parsed and saved for comment {}", c.getId());
+
         return c.getId();
     }
 
     @Override
+    @Cacheable(value = "comments", key = "#articleId")
     public List<CommentTreeResponse> getCommentsTree(UUID articleId) {
+
+        log.info("Fetching comments tree for article {}", articleId);
 
         // 1. Validate article
         if (!articleRepository.existsById(articleId)) {
+            log.info("Article {} not found", articleId);
             throw new ResourceNotFoundException("Article not found");
         }
 
@@ -144,6 +158,8 @@ public class CommentServiceImpl implements CommentService {
         // 6. Sort replies recursively (latest first)
         sortRepliesByLatest(roots);
 
+        log.info("Comments tree for article {} built successfully with {} root comments",
+                articleId, roots.size());
         return roots;
     }
 

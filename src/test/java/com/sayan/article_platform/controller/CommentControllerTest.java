@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -21,14 +22,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CommentController.class)
-@Import({JwtUtil.class, SecurityConfig.class})
+@AutoConfigureMockMvc(addFilters = false)
 class CommentControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private JwtUtil jwtUtil;
 
     @MockBean
     private CommentService service;
@@ -39,9 +37,6 @@ class CommentControllerTest {
     @Test
     void reply_success() throws Exception {
 
-        UUID userId = UUID.randomUUID();
-        String token = jwtUtil.generate(userId); // ✅ REAL TOKEN
-
         UUID responseId = UUID.randomUUID();
 
         CreateCommentRequest req =
@@ -51,7 +46,7 @@ class CommentControllerTest {
                 .thenReturn(responseId);
 
         mockMvc.perform(post("/api/comments")
-                        .header("Authorization", "Bearer " + token)
+                        //.header("Authorization", "Bearer " + token)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
@@ -61,13 +56,11 @@ class CommentControllerTest {
     @Test
     void reply_validation_fail() throws Exception {
 
-        String token = jwtUtil.generate(UUID.randomUUID());
-
         CreateCommentRequest req =
                 new CreateCommentRequest(null, null, "");
 
         mockMvc.perform(post("/api/comments")
-                        .header("Authorization", "Bearer " + token)
+                        //.header("Authorization", "Bearer " + token)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))

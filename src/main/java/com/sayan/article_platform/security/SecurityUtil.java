@@ -1,5 +1,6 @@
 package com.sayan.article_platform.security;
 
+import com.sayan.article_platform.model.UserPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.UUID;
@@ -13,6 +14,8 @@ public class SecurityUtil {
             throw new RuntimeException("Unauthorized");
         }
 
-        return (UUID) auth.getPrincipal();
+        UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
+
+        return principal.getId();
     }
 }

@@ -10,6 +10,7 @@ import com.sayan.article_platform.repository.ArticleRepository;
 import com.sayan.article_platform.repository.CommentRepository;
 import com.sayan.article_platform.repository.MentionRepository;
 import com.sayan.article_platform.repository.UserRepository;
+import com.sayan.article_platform.security.SecurityUtil;
 import com.sayan.article_platform.util.MentionParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -84,8 +87,17 @@ class CommentServiceImplTest {
         when(userRepo.findByUsername("sayan"))
                 .thenReturn(Optional.of(mentionedUser));
 
-        UUID commentId =
-                commentService.reply(request, userId);
+        UUID commentId;
+
+        try (MockedStatic<SecurityUtil> mockedSecurity =
+                     Mockito.mockStatic(SecurityUtil.class)) {
+
+            mockedSecurity.when(SecurityUtil::getCurrentUserId)
+                    .thenReturn(userId);
+
+            commentId =
+                    commentService.reply(request, userId);
+        }
 
         assertThat(commentId).isNotNull();
 
@@ -121,8 +133,17 @@ class CommentServiceImplTest {
         when(mentionParser.parse(request.content()))
                 .thenReturn(List.of());
 
-        UUID commentId =
-                commentService.reply(request, userId);
+        UUID commentId;
+
+        try (MockedStatic<SecurityUtil> mockedSecurity =
+                     Mockito.mockStatic(SecurityUtil.class)) {
+
+            mockedSecurity.when(SecurityUtil::getCurrentUserId)
+                    .thenReturn(userId);
+
+            commentId =
+                    commentService.reply(request, userId);
+        }
 
         assertThat(commentId).isNotNull();
 

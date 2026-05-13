@@ -22,12 +22,13 @@ class JwtUtilTest {
 
         UUID userId = UUID.randomUUID();
 
-        String token = jwtUtil.generate(userId);
+        String userName = "sayan";
+        String token = jwtUtil.generate(userName);
 
-        UUID extractedUserId = jwtUtil.extract(token);
+        String extractedUserId = jwtUtil.extractUserName(token);
 
         assertThat(extractedUserId)
-                .isEqualTo(userId);
+                .isEqualTo("sayan");
     }
 
     @Test
@@ -35,7 +36,8 @@ class JwtUtilTest {
 
         UUID userId = UUID.randomUUID();
 
-        String token = jwtUtil.generate(userId);
+        String userName = "sayan";
+        String token = jwtUtil.generate(userName);
 
         assertThat(token)
                 .isNotBlank();
@@ -48,7 +50,7 @@ class JwtUtilTest {
 
         assertThrows(
                 Exception.class,
-                () -> jwtUtil.extract(invalidToken)
+                () -> jwtUtil.extractUserName(invalidToken)
         );
     }
 
@@ -58,11 +60,13 @@ class JwtUtilTest {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
 
-        String token1 = jwtUtil.generate(user1);
-        String token2 = jwtUtil.generate(user2);
+        String userName = "sayan";
+        String token = jwtUtil.generate(userName);
+        String userName1 = "saha";
+        String token1 = jwtUtil.generate(userName1);
 
         assertThat(token1)
-                .isNotEqualTo(token2);
+                .isNotEqualTo(token);
     }
 
     @Test
@@ -70,11 +74,11 @@ class JwtUtilTest {
 
         UUID expectedUserId = UUID.randomUUID();
 
-        String token = jwtUtil.generate(expectedUserId);
+        String token = jwtUtil.generate("testuser");
 
-        UUID actualUserId = jwtUtil.extract(token);
+        String actualUserId = jwtUtil.extractUserName(token);
 
         assertThat(actualUserId)
-                .isEqualTo(expectedUserId);
+                .isEqualTo("testuser");
     }
 }

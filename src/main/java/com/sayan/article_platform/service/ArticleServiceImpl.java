@@ -7,6 +7,7 @@ import com.sayan.article_platform.repository.ArticleRepository;
 import com.sayan.article_platform.security.SecurityUtil;
 
 import com.sayan.article_platform.util.AuthUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 @Service
 @Transactional
+@Slf4j
 public class ArticleServiceImpl implements ArticleService {
 
     private final ArticleRepository repository;
@@ -35,6 +37,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @CacheEvict(value = "articles", allEntries = true)
     public ArticleResponse createArticle(CreateArticleRequest request) {
+
+        log.info("Creating article with title: {}", request.title());
 
         UUID userId = SecurityUtil.getCurrentUserId();
 
@@ -53,6 +57,8 @@ public class ArticleServiceImpl implements ArticleService {
     @CacheEvict(value = "articles", allEntries = true)
     public ArticleResponse editArticle(UUID articleId, CreateArticleRequest request) {
 
+        log.info("Editing article with id: {}", articleId);
+
         UUID userId = SecurityUtil.getCurrentUserId();
 
         Article article = findOrThrow(articleId);
@@ -70,6 +76,8 @@ public class ArticleServiceImpl implements ArticleService {
     @CacheEvict(value = {"articles", "article"}, allEntries = true)
     public ArticleResponse publishArticle(UUID articleId) {
 
+        log.info("Publishing article with id: {}", articleId);
+
         UUID userId = SecurityUtil.getCurrentUserId();
 
         Article article = findOrThrow(articleId);
@@ -81,6 +89,7 @@ public class ArticleServiceImpl implements ArticleService {
         article.setCreatedAt(LocalDateTime.now());
         article.setIsPublished(true);
 
+
         return map(article);
     }
 
@@ -89,6 +98,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Transactional(readOnly = true)
     @Cacheable(value = "articles", key = "'all'")
     public List<ArticleResponse> getPublishedArticles() {
+
+        log.info("Fetching published articles");
 
         return repository.findByIsPublishedTrueOrderByCreatedAtDesc()
                 .stream()
@@ -101,6 +112,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Transactional(readOnly = true)
     @Cacheable(value = "article", key = "#articleId")
     public ArticleResponse getArticleById(UUID articleId) {
+
+        log.info("Fetching article with id: {}", articleId);
 
         return map(findOrThrow(articleId));
     }
@@ -124,6 +137,8 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public Page<ArticleResponse> getMyDrafts(Pageable pageable) {
+
+        log.info("Fetching drafts for user: {}", authUtil.getCurrentUserId());
 
         return repository
                 .findByAuthorIdAndIsPublishedFalseOrderByCreatedAtDesc(

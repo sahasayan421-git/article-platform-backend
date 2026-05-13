@@ -1,5 +1,6 @@
 package com.sayan.article_platform.util;
 
+import com.sayan.article_platform.model.UserPrincipal;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,8 @@ public class AuthUtil {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        return (UUID) authentication.getPrincipal();
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+
+        return principal.getId();
     }
 }

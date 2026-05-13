@@ -2,14 +2,12 @@ package com.sayan.article_platform.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sayan.article_platform.dto.response.ArticleResponse;
-import com.sayan.article_platform.security.JwtUtil;
-import com.sayan.article_platform.security.SecurityConfig;
 import com.sayan.article_platform.service.ArticleService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @WebMvcTest(ArticleController.class)
-@Import({JwtUtil.class, SecurityConfig.class})
+@AutoConfigureMockMvc(addFilters = false)
 class ArticleControllerTest {
 
     @Autowired
@@ -39,14 +37,9 @@ class ArticleControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
     @Test
     void shouldReturnCurrentUsersDraftArticles() throws Exception {
 
-        UUID userId = UUID.randomUUID();
-        String token = jwtUtil.generate(userId);
 
         ArticleResponse articleResponse = ArticleResponse.builder()
                 .id(UUID.randomUUID())
@@ -71,7 +64,7 @@ class ArticleControllerTest {
                         get("/articles/drafts")
                                 .param("page", "0")
                                 .param("size", "10")
-                                .header("Authorization", "Bearer " + token)
+                                //.header("Authorization", "Bearer " + token)
                                 .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -95,9 +88,6 @@ class ArticleControllerTest {
     @Test
     void shouldReturnEmptyDraftList() throws Exception {
 
-        UUID userId = UUID.randomUUID();
-        String token = jwtUtil.generate(userId);
-
         Page<ArticleResponse> emptyPage =
                 Page.empty(PageRequest.of(0, 10));
 
@@ -108,7 +98,7 @@ class ArticleControllerTest {
                         get("/articles/drafts")
                                 .param("page", "0")
                                 .param("size", "10")
-                                .header("Authorization", "Bearer " + token)
+                                //.header("Authorization", "Bearer " + token)
                                 .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                 )

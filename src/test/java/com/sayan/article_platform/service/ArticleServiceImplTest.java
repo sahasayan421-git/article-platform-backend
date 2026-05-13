@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ArticleServiceImplTest {
@@ -77,7 +76,7 @@ class ArticleServiceImplTest {
         assertThat(result.content()).isEqualTo("Draft Content");
         assertThat(result.published()).isFalse();
 
-        verify(authUtil).getCurrentUserId();
+        verify(authUtil, times(2)).getCurrentUserId();
 
         verify(articleRepository)
                 .findByAuthorIdAndIsPublishedFalseOrderByCreatedAtDesc(
@@ -105,6 +104,6 @@ class ArticleServiceImplTest {
         assertThat(response).isNotNull();
         assertThat(response.getContent()).isEmpty();
 
-        verify(authUtil).getCurrentUserId();
+        verify(authUtil, times(2)).getCurrentUserId();
     }
 }

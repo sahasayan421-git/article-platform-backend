@@ -6,11 +6,13 @@ import com.sayan.article_platform.entity.User;
 import com.sayan.article_platform.repository.CommentRepository;
 import com.sayan.article_platform.repository.MentionRepository;
 import com.sayan.article_platform.repository.UserRepository;
+import com.sayan.article_platform.security.SecurityUtil;
 import com.sayan.article_platform.util.MentionParser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -45,18 +47,34 @@ class CommentServiceTest {
         when(userRepo.findByUsername("john"))
                 .thenReturn(Optional.of(new User(mentionedId, "john", "e", "p")));
 
-        service.reply(req, userId);
+        try (MockedStatic<SecurityUtil> mockedSecurity =
+                     Mockito.mockStatic(SecurityUtil.class)) {
 
-        verify(mentionRepo, times(1)).save(any());
+            mockedSecurity.when(SecurityUtil::getCurrentUserId)
+                    .thenReturn(userId);
+
+            service.reply(req, userId);
+
+            verify(mentionRepo, times(1)).save(any());
+        }
     }
 
     @Test
     void reply_noMention_shouldNotPublishEvent() {
+
+        UUID userId = UUID.randomUUID();
         CreateCommentRequest req =
                 new CreateCommentRequest(UUID.randomUUID(), null, "hello");
 
         when(parser.parse(any())).thenReturn(java.util.List.of());
 
-        service.reply(req, UUID.randomUUID());
+        try (MockedStatic<SecurityUtil> mockedSecurity =
+                     Mockito.mockStatic(SecurityUtil.class)) {
+
+            mockedSecurity.when(SecurityUtil::getCurrentUserId)
+                    .thenReturn(userId);
+
+            service.reply(req, userId);
+        }
     }
 }
