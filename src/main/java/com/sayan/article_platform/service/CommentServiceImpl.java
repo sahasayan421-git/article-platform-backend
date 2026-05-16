@@ -50,12 +50,17 @@ public class CommentServiceImpl implements CommentService {
     @CacheEvict(value = "comments", key = "#request.articleId()")
     public UUID reply(CreateCommentRequest request, UUID userId) {
 
-        log.info("User {} is replying to article {} with content: {}", SecurityUtil.getCurrentUserId(), request.articleId(), request.content());
+        if(userId == null) {
+            log.info("User {} is trying to comment on article {}", userId, request.articleId());
+            userId = SecurityUtil.getCurrentUserId();
+        }
+
+        log.info("User {} is replying to article {} with content: {}", userId, request.articleId(), request.content());
 
         Comment c = new Comment();
         c.setId(UUID.randomUUID());
         c.setArticleId(request.articleId());
-        c.setUserId(SecurityUtil.getCurrentUserId());
+        c.setUserId(userId);
         c.setParentCommentId(request.parentCommentId());
         c.setContent(request.content());
         c.setCreatedAt(LocalDateTime.now());

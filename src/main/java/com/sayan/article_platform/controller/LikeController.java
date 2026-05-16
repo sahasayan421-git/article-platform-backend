@@ -2,6 +2,7 @@ package com.sayan.article_platform.controller;
 
 import com.sayan.article_platform.dto.response.LikesCountResponse;
 import com.sayan.article_platform.dto.response.UserLikeResponse;
+import com.sayan.article_platform.model.UserPrincipal;
 import com.sayan.article_platform.service.LikeService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,8 +26,8 @@ public class LikeController {
 
     @PostMapping("/article/{id}")
     public ResponseEntity<?> likeArticle(@PathVariable UUID id,
-                                         @AuthenticationPrincipal UUID userId) {
-        service.likeArticle(id, userId);
+                                         @AuthenticationPrincipal UserPrincipal principal) {
+        service.likeArticle(id, principal.getId());
         return ResponseEntity.ok().build();
     }
 

@@ -2,6 +2,7 @@ package com.sayan.article_platform.controller;
 
 import com.sayan.article_platform.dto.request.CreateCommentRequest;
 import com.sayan.article_platform.dto.response.CommentTreeResponse;
+import com.sayan.article_platform.model.UserPrincipal;
 import com.sayan.article_platform.service.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +26,9 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<?> reply(
             @Valid @RequestBody CreateCommentRequest request,
-            @AuthenticationPrincipal UUID userId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return ResponseEntity.ok(service.reply(request, userId));
+        return ResponseEntity.ok(service.reply(request, principal.getId()));
     }
 
     @GetMapping("/{articleId}/comments")

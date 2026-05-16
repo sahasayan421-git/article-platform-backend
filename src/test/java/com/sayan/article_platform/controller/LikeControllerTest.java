@@ -2,10 +2,11 @@ package com.sayan.article_platform.controller;
 
 import com.sayan.article_platform.dto.response.LikesCountResponse;
 import com.sayan.article_platform.dto.response.UserLikeResponse;
+import com.sayan.article_platform.model.UserPrincipal;
+import com.sayan.article_platform.entity.User;
 import com.sayan.article_platform.service.LikeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
@@ -20,15 +21,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(LikeController.class)
-@AutoConfigureMockMvc(addFilters = false)
 class LikeControllerTest {
 
     @Autowired
@@ -37,19 +36,28 @@ class LikeControllerTest {
     @MockBean
     private LikeService likeService;
 
+    private UserPrincipal createMockPrincipal(UUID userId) {
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername("testuser");
+        return new UserPrincipal(mockUser);
+    }
+
     @Test
     void shouldLikeArticleSuccessfully() throws Exception {
 
         UUID articleId = UUID.randomUUID();
-
         UUID userId = UUID.randomUUID();
 
         doNothing().when(likeService)
                 .likeArticle(articleId, userId);
 
+        UserPrincipal principal = createMockPrincipal(userId);
+
         mockMvc.perform(
                         post("/api/likes/article/{id}", articleId)
-                                .principal(() -> userId.toString())
+                                .with(user(principal))
+                                .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk());
@@ -59,6 +67,7 @@ class LikeControllerTest {
     void shouldReturnLikesCountSuccessfully() throws Exception {
 
         UUID articleId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
 
         LikesCountResponse response =
                 new LikesCountResponse(articleId, 5L);
@@ -66,8 +75,11 @@ class LikeControllerTest {
         when(likeService.getLikesCount(articleId))
                 .thenReturn(response);
 
+        UserPrincipal principal = createMockPrincipal(userId);
+
         mockMvc.perform(
                         get("/api/likes/{articleId}/likes/count", articleId)
+                                .with(user(principal))
                 )
                 .andExpect(status().isOk())
 
@@ -82,6 +94,9 @@ class LikeControllerTest {
     void shouldReturnUsersWhoLikedArticle() throws Exception {
 
         UUID articleId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        UserPrincipal principal = createMockPrincipal(userId);
 
         UserLikeResponse user1 =
                 UserLikeResponse.builder()
@@ -108,6 +123,7 @@ class LikeControllerTest {
 
         mockMvc.perform(
                         get("/api/likes/{articleId}/likes", articleId)
+                                .with(user(principal))
                                 .param("page", "0")
                                 .param("size", "10")
                 )
